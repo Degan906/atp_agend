@@ -3,6 +3,9 @@ from jira import JIRA
 from datetime import datetime, timedelta
 import pandas as pd
 
+# Configuração da página
+st.set_page_config(page_title="Agendamentos", layout="wide")
+
 # URL do logotipo
 LOGO_URL = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRCx0Ywq0Bhihr0RLdHbBrqyuCsRLoV2KLs2g&s"
 
