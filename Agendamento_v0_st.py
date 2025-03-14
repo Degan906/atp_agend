@@ -295,7 +295,7 @@ def show_main_screen():
             text-align: center;
             padding: 10px;
             font-size: 14px;
-            border-top: 1px solid #ddd;
+            border-top: 2px solid #ddd;
         }
         </style>
         """,
