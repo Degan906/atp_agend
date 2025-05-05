@@ -47,29 +47,29 @@ def get_issues_by_day(jira):
             issue_count[date_key] = issue_count.get(date_key, []) + [issue]
     return issue_count
 
-# Função para criar o calendário interativo com navegação por mês
+# Função para criar o calendário interativo
 def create_calendar(issues_by_day):
-    # Estado para armazenar o mês atual
+    today = datetime.now().date()
+
+    # Estado para controle do mês exibido
     if 'current_month' not in st.session_state:
-        st.session_state.current_month = datetime.now().month
+        st.session_state.current_month = today.month
     if 'current_year' not in st.session_state:
-        st.session_state.current_year = datetime.now().year
+        st.session_state.current_year = today.year
 
     current_year = st.session_state.current_year
     current_month = st.session_state.current_month
-    today = datetime.now().date()
 
     first_day = datetime(current_year, current_month, 1).date()
     last_day = (datetime(current_year + (current_month // 12),
                          ((current_month % 12) + 1), 1) - timedelta(days=1)).date()
     days_in_month = last_day.day
-    first_weekday = first_day.weekday()  # 0=segunda ... 4=sexta, 5=sábado, 6=domingo
+    first_weekday = first_day.weekday()  # 0=segunda ... 6=domingo
 
     weekdays = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"]
 
     st.markdown("<h3 style='text-align:center;'>📅 Calendário</h3>", unsafe_allow_html=True)
 
-    # Navegação de meses
     col_prev, col_title, col_next = st.columns([1, 3, 1])
     with col_prev:
         if st.button("⬅️ Anterior"):
@@ -90,16 +90,13 @@ def create_calendar(issues_by_day):
     with col_title:
         st.markdown(f"<h4 style='text-align:center;'>{first_day.strftime('%B %Y')}</h4>", unsafe_allow_html=True)
 
-    # Cabeçalho da semana
     cols = st.columns(7)
     for i, day in enumerate(weekdays):
         cols[i].markdown(f"<div style='text-align:center; font-weight:bold;'>{day}</div>", unsafe_allow_html=True)
 
-    # Preenchimento do calendário
     current_row = []
     calendar_rows = []
 
-    # Dias vazios antes do início do mês
     for _ in range(first_weekday):
         current_row.append(None)
 
@@ -133,16 +130,12 @@ def create_calendar(issues_by_day):
                     <div style='width:100%; height:100px; background-color:{bgcolor}; color:{text_color};
                                 display:flex; flex-direction:column; align-items:center; justify-content:center;
                                 border-radius:8px; cursor:pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1);'
-                                onclick="document.getElementById('selected_date').value='{date_key}';">
+                                onclick="window.location.href='?date={date_key}'">
                         <span style='font-size:16px; font-weight:normal;'>{day}</span>
                         <span style='font-size:20px; font-weight:bold;'>🚗 {issue_count}</span>
                     </div>
                     """
                     st.markdown(card_html, unsafe_allow_html=True)
-                    if st.button(f"Ver {day}", key=f"btn_{date_key}"):
-                        st.session_state.selected_date = date_key
-                        st.session_state.view = "day_details"
-                        st.rerun()
             else:
                 cols[i].empty()
 
@@ -154,11 +147,10 @@ def show_issues_for_date(selected_date, issues_by_day):
     if not issues:
         st.info("Nenhum agendamento encontrado para esta data.")
         if st.button("⬅️ Voltar ao Calendário"):
-            st.session_state.view = "calendar"
+            st.query_params.clear()
             st.rerun()
         return
 
-    # Preparando dados para DataFrame
     data = []
     for idx, issue in enumerate(issues):
         tipo_servico = ", ".join([opt.value for opt in issue.fields.customfield_11725]) if issue.fields.customfield_11725 else "-"
@@ -180,9 +172,7 @@ def show_issues_for_date(selected_date, issues_by_day):
 
     edited_df = st.data_editor(
         df,
-        column_config={
-            "Confirmado": st.column_config.CheckboxColumn("Confirmado", help="Marque para confirmar a chegada")
-        },
+        column_config={"Confirmado": st.column_config.CheckboxColumn("Confirmado")},
         use_container_width=True,
         hide_index=True,
         disabled=["Nº", "Veículo", "Placa", "Tipo de Serviço", "Consultor", "Criador", "Status"]
@@ -194,12 +184,11 @@ def show_issues_for_date(selected_date, issues_by_day):
         st.dataframe(confirmed.drop(columns=["Confirmado"]), use_container_width=True)
 
     if st.button("⬅️ Voltar ao Calendário"):
-        st.session_state.view = "calendar"
+        st.query_params.clear()
         st.rerun()
 
 # Tela principal
 def show_main_screen():
-    # CSS personalizado
     st.markdown("""
     <style>
     .footer {
@@ -243,12 +232,12 @@ def show_main_screen():
     if jira:
         issues_by_day = get_issues_by_day(jira)
 
-        if st.session_state.get("view") == "today":
+        query_params = st.query_params
+        if "date" in query_params:
+            selected_date = datetime.strptime(query_params["date"], "%Y-%m-%d").date()
+            show_issues_for_date(selected_date, issues_by_day)
+        elif st.session_state.get("view") == "today":
             show_issues_for_today(issues_by_day)
-        elif st.session_state.get("view") == "day_details":
-            selected_date = st.session_state.get("selected_date")
-            if selected_date:
-                show_issues_for_date(selected_date, issues_by_day)
         else:
             create_calendar(issues_by_day)
 
