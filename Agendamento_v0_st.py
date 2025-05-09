@@ -134,8 +134,8 @@ def create_calendar(issues_by_day):
                                 display:flex; flex-direction:column; align-items:center; justify-content:center;
                                 border-radius:8px; cursor:pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1);'
                                 onclick="document.getElementById('selected_date').value='{date_key}';">
-                        <span style='font-size:22px; font-weight:normal;'>{day}</span>
-                        <span style='font-size:20px; font-weight:bold;'>🚗 {issue_count}</span>
+                        <span style='font-size:25px; font-weight:normal;'>Dia: {day}</span>
+                        <span style='font-size:23px; font-weight:bold;'>🚗: {issue_count}</span>
                     </div>
                     """
                     st.markdown(card_html, unsafe_allow_html=True)
