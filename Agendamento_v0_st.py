@@ -110,7 +110,7 @@ def create_calendar(issues_by_day):
         is_today = today == date_key
         is_weekend = date_key.weekday() >= 5
 
-        bgcolor = "#808080" if is_weekend else "#FFFF00" if is_today else "#00008B" if issue_count > 0 else "#D3D3D3"
+        bgcolor = "#808080" if is_weekend else "#00008B" if is_today else "#00BFFF" if issue_count > 0 else "#D3D3D3"
         text_color = "#000000" if bgcolor == "#FFFF00" or bgcolor == "#ffffff" else "#ffffff"
 
         current_row.append((day, date_key, issue_count, bgcolor, text_color))
